@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Jeremy_BlindHash>
+            <version>0.2.0</version>
+        </Jeremy_BlindHash>
+    </modules>
+    <default>
+        <jeremy>
+            <blindhash>                
+                <enabled>0</enabled>
+            </blindhash>
+        </jeremy>
+    </default>
+    <global>
+        <helpers>            
+            <jeremy_blindhash>
+                <class>Jeremy_BlindHash_Helper</class>
+            </jeremy_blindhash>
+        </helpers>
+        <models>
+            <jeremy_blindhash>
+                <class>Jeremy_BlindHash_Model</class>
+            </jeremy_blindhash>
+        </models>
+        <resources>
+            <blindhash_setup>
+                <setup>
+                    <module>Jeremy_BlindHash</module>
+                    <class>Mage_Customer_Model_Entity_Setup</class>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </blindhash_setup>
+        </resources>
+        <events>
+            <!-- replaces the customer passwords hashed the old way -->
+            <customer_customer_authenticated>
+                <observers>
+                    <replace_old_customer_passwords>
+                        <type>singleton</type>
+                        <class>jeremy_blindhash/observer</class>
+                        <method>customerCustomerAuthenticated</method>
+                    </replace_old_customer_passwords>
+                </observers>
+            </customer_customer_authenticated>
+            <!-- replaces the admin passwords hashed the old way -->
+            <admin_user_authenticate_after>
+                <observers>
+                    <replace_old_admin_passwords>
+                        <type>singleton</type>
+                        <class>jeremy_blindhash/observer</class>
+                        <method>adminUserAuthenticateAfter</method>
+                    </replace_old_admin_passwords>
+                </observers>
+            </admin_user_authenticate_after>
+        </events>
+    </global>    
+</config>
+        
