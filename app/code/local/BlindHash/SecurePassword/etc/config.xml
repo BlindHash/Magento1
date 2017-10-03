@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <BlindHash_SecurePassword>
+            <version>0.1.0</version>
+        </BlindHash_SecurePassword>
+    </modules>
+    <default>
+        <blindhash>
+            <securepassword>                
+                <enabled>0</enabled>
+            </securepassword>
+        </blindhash>
+    </default>
+    <global>
+        <helpers>            
+            <core>
+                <!-- Overwrite the Core Encryption Model -->
+                <encryption_model>BlindHash_SecurePassword_Model_Encryption</encryption_model>
+            </core>
+            <blindhash_securepassword>
+                <class>BlindHash_SecurePassword_Helper</class>
+            </blindhash_securepassword>
+        </helpers>
+        <models>
+            <blindhash_securepassword>
+                <class>BlindHash_SecurePassword_Model</class>
+            </blindhash_securepassword>
+        </models>
+        <resources>
+            <blindhash_securepassword_setup>
+                <setup>
+                    <module>BlindHash_SecurePassword</module>
+                    <class>Mage_Customer_Model_Entity_Setup</class>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </blindhash_securepassword_setup>
+        </resources>
+        <events>
+            <!-- replaces the customer passwords hashed the old way -->
+            <customer_customer_authenticated>
+                <observers>
+                    <replace_old_customer_passwords>
+                        <type>singleton</type>
+                        <class>blindhash_securepassword/observer</class>
+                        <method>customerCustomerAuthenticated</method>
+                    </replace_old_customer_passwords>
+                </observers>
+            </customer_customer_authenticated>
+            <!-- replaces the admin passwords hashed the old way -->
+            <!--            <admin_user_authenticate_after>
+                <observers>
+                    <replace_old_admin_passwords>
+                        <type>singleton</type>
+                        <class>blindhash_securepassword/observer</class>
+                        <method>adminUserAuthenticateAfter</method>
+                    </replace_old_admin_passwords>
+                </observers>
+            </admin_user_authenticate_after>-->
+        </events>
+    </global>    
+</config>
+        
