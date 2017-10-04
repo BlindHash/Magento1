@@ -4,23 +4,27 @@ interface BlindHash_SecurePassword_Model_Encryption_Interface
 {
 
     /**
-     * validate the password against the hash
+     * Validate hash against hashing method (with or without salt)
      *
-     * @param $password password
-     * @param $hash hash to validate against
-     *
-     * @return boolean
+     * @param string $password
+     * @param string $hash
+     * @return bool
+     * @throws \Exception
      */
     public function validateHash($password, $hash);
 
     /**
-     * get the password hashed with the passed salt
+     * Generate a [salted] hash.
      *
-     * @param  string $password the users password
-     * @param bool|string $salt if false, then a salt will be
-     * generated, if string, the string will be used
+     * $salt can be:
+     * false - old Mage_Core_Model_Encryption::hash() function will be used
+     * integer - a random with specified length will be generated
+     * string - use the given salt for _blindhash
      *
-     * @return string the hashed password with the salt
+     * @param string $plaintext
+     * @param mixed  $salt
+     *
+     * @return string
      */
-    public function getHash($password, $salt = false);
+    public function getHash($plaintext, $salt = false);
 }

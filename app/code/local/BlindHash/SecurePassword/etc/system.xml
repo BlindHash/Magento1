@@ -2,13 +2,13 @@
 <config>
     <tabs>
         <blindhash translate="label" module="blindhash_securepassword">
-            <label>BlindHash</label>
+            <label>Blind Hash</label>
             <sort_order>506</sort_order>
         </blindhash>
     </tabs>
     <sections>
         <blindhash translate="label" module="blindhash_securepassword">
-            <label>blindhash Hashing</label>
+            <label>Secure Password</label>
             <tab>blindhash</tab>
             <sort_order>120</sort_order>
             <show_in_default>1</show_in_default>

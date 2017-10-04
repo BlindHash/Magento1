@@ -37,6 +37,12 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
      */
     public function getHash($plaintext, $salt = false)
     {
+        if (!(boolean) Mage::getStoreConfig(
+                'blindhash/securepassword/enabled'
+            )) {
+            return parent::getHash($plaintext, $salt);
+        }
+
         if ($salt === false) {
             return $this->hash($plaintext);
         }
@@ -52,13 +58,18 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
         // The hash to send to TapLink is the SHA512-HMAC(salt, password)
         $res = $this->taplink->newPassword(hash_hmac(self::HASH_ALGORITHM, $plaintext, $salt));
         if ($res->error) {
-            Mage::throwException($res->error);
+            Mage::logException($res->error);
         }
-
-        // The format is <T>:<hash2hex>:<salt>:<taplink.version>
+        
         return @implode(self::DELIMITER, [self::PREFIX, $this->encrypt($res->hash2Hex), $this->encrypt($salt), $res->versionId]);
     }
 
+    /**
+     * Check if string is blind hashed
+     * 
+     * @param string $hash
+     * @return bool 
+     */
     public function IsBlindHashed($hash)
     {
         $hashArr = explode(self::DELIMITER, $hash);
@@ -75,6 +86,13 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
      */
     public function validateHash($password, $hash)
     {
+
+        if (!(boolean) Mage::getStoreConfig(
+                'blindhash/securepassword/enabled'
+            )) {
+            return parent::validateHash($password, $hash);
+        }
+
         $hashArr = explode(self::DELIMITER, $hash);
         if (count($hashArr) != 4) {
             return parent::validateHash($password, $hash);
@@ -85,11 +103,10 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
 
         $expectedHash2Hex = $this->decrypt($expectedHash2Hex);
         $salt = $this->decrypt($salt);
-
-        // This is a TapLink Blind hash
+        
         $res = $this->taplink->verifyPassword(hash_hmac(self::HASH_ALGORITHM, $password, $salt), $expectedHash2Hex, $tapLinkVersion);
         if ($res->error) {
-            Mage::throwException($res->error);
+            Mage::logException($res->error);
         }
         return $res->matched;
     }

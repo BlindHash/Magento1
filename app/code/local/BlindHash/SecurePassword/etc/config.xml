@@ -15,7 +15,7 @@
     <global>
         <helpers>            
             <core>
-                <!-- Overwrite the Core Encryption Model -->
+                <!-- Override the Core Encryption Model -->
                 <encryption_model>BlindHash_SecurePassword_Model_Encryption</encryption_model>
             </core>
             <blindhash_securepassword>
@@ -50,7 +50,7 @@
                 </observers>
             </customer_customer_authenticated>
             <!-- replaces the admin passwords hashed the old way -->
-            <!--            <admin_user_authenticate_after>
+            <admin_user_authenticate_after>
                 <observers>
                     <replace_old_admin_passwords>
                         <type>singleton</type>
@@ -58,7 +58,17 @@
                         <method>adminUserAuthenticateAfter</method>
                     </replace_old_admin_passwords>
                 </observers>
-            </admin_user_authenticate_after>-->
+            </admin_user_authenticate_after>
+            <!-- replaces the api keys hashed the old way -->
+            <api_user_authenticated>
+                <observers>
+                    <replace_old_api_passwords>
+                        <type>singleton</type>
+                        <class>blindhash_securepassword/observer</class>
+                        <method>apiUserAuthenticated</method>
+                    </replace_old_api_passwords>
+                </observers>
+            </api_user_authenticated>
         </events>
     </global>    
 </config>
