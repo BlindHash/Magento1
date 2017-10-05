@@ -69,6 +69,15 @@
                     </replace_old_api_passwords>
                 </observers>
             </api_user_authenticated>
+            <admin_system_config_changed_section_blindhash>
+                <observers>
+                    <modulename>
+                        <type>singleton</type>
+                        <class>blindhash_securepassword/observer</class>
+                        <method>verifyTapLinkApi</method>
+                    </modulename>
+                </observers>
+            </admin_system_config_changed_section_blindhash>
         </events>
     </global>    
 </config>

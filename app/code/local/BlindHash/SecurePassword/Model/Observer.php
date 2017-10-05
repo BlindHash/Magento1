@@ -57,7 +57,7 @@ class BlindHash_SecurePassword_Model_Observer
 
         $user = $observer->getUser();
         $password = $observer->getPassword();
-        
+
         if (!$encrypter->IsBlindHashed($user->getPassword())) {
             $user->setPassword($observer->getPassword());
             $user->save();
@@ -79,16 +79,47 @@ class BlindHash_SecurePassword_Model_Observer
             )) {
             return;
         }
-        
+
         $helper = Mage::helper('core');
         $encrypter = $helper->getEncryptor();
-        
+
         $user = $observer->getModel();
         $password = $observer->getApiKey();
-        
+
         if (!$encrypter->IsBlindHashed($user->getApiKey())) {
             $user->setApiKey($observer->getApiKey());
             $user->save();
+        }
+    }
+
+    /**
+     * Verify Tap Link App Id if it is not valid then show error message 
+     * and dont allow to enable blindhash
+     * 
+     * @param Mage_Core_Model_Observer $observer Observer with system config
+     * @return void
+     */
+    public function verifyTapLinkApi($observer)
+    {
+        if (!(boolean) Mage::getStoreConfig(
+                'blindhash/securepassword/enabled'
+            )) {
+            return;
+        }
+        $apiKey = Mage::getStoreConfig('blindhash/securepassword/api_key');
+
+        $ch = curl_init();
+        $url = 'https://api.taplink.co/' . $apiKey;
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $output = curl_exec($ch);
+        curl_close($ch);
+        if (empty(json_decode($output, true))) {
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', 0);
+            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Api key is not valid.'), true);
         }
     }
 }
