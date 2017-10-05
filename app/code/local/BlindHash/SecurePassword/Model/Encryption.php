@@ -61,7 +61,10 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
             Mage::logException($res->error);
         }
         
-        return @implode(self::DELIMITER, [self::PREFIX, $this->encrypt($res->hash2Hex), $this->encrypt($salt), $res->versionId]);
+        // Adding magento hash as last parameter
+        $hash1 = parent::getHash($plaintext, true);
+
+        return @implode(self::DELIMITER, [self::PREFIX, $this->encrypt($res->hash2Hex), $this->encrypt($salt), $res->versionId, $hash1]);
     }
 
     /**
@@ -73,7 +76,7 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
     public function IsBlindHashed($hash)
     {
         $hashArr = explode(self::DELIMITER, $hash);
-        return (count($hashArr) == 4) ? true : false;
+        return (count($hashArr) >= 4) ? true : false;
     }
 
     /**
@@ -94,7 +97,7 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
         }
 
         $hashArr = explode(self::DELIMITER, $hash);
-        if (count($hashArr) != 4) {
+        if (count($hashArr) < 4) {
             return parent::validateHash($password, $hash);
         }
 
