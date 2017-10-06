@@ -22,6 +22,11 @@
                 <class>BlindHash_SecurePassword_Helper</class>
             </blindhash_securepassword>
         </helpers>
+        <blocks>
+            <blindhash_securepassword>
+                <class>BlindHash_SecurePassword_Block</class>
+            </blindhash_securepassword>
+        </blocks>
         <models>
             <blindhash_securepassword>
                 <class>BlindHash_SecurePassword_Model</class>
@@ -79,6 +84,17 @@
                 </observers>
             </admin_system_config_changed_section_blindhash>
         </events>
-    </global>    
+    </global>        
+    <admin>
+        <routers>
+            <adminhtml>
+                <args>
+                    <modules>
+                        <BlindHash_SecurePassword after="Mage_Adminhtml">BlindHash_SecurePassword_Adminhtml</BlindHash_SecurePassword>
+                    </modules>
+                </args>
+            </adminhtml>
+        </routers>
+    </admin>
 </config>
         

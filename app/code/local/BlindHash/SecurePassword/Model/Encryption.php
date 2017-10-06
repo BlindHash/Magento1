@@ -60,9 +60,9 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
         if ($res->error) {
             Mage::logException($res->error);
         }
-        
+
         // Adding magento hash as last parameter
-        $hash1 = parent::getHash($plaintext, true);
+        $hash1 = parent::getHash($plaintext, $salt);
 
         return @implode(self::DELIMITER, [self::PREFIX, $this->encrypt($res->hash2Hex), $this->encrypt($salt), $res->versionId, $hash1]);
     }
@@ -96,17 +96,17 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
             return parent::validateHash($password, $hash);
         }
 
-        $hashArr = explode(self::DELIMITER, $hash);
-        if (count($hashArr) < 4) {
+        if (!$this->IsBlindHashed($hash)) {
             return parent::validateHash($password, $hash);
         }
 
         // Get the pieces of the puzzle.
+        $hashArr = explode(self::DELIMITER, $hash);
         list($T, $expectedHash2Hex, $salt, $tapLinkVersion) = $hashArr;
 
         $expectedHash2Hex = $this->decrypt($expectedHash2Hex);
         $salt = $this->decrypt($salt);
-        
+
         $res = $this->taplink->verifyPassword(hash_hmac(self::HASH_ALGORITHM, $password, $salt), $expectedHash2Hex, $tapLinkVersion);
         if ($res->error) {
             Mage::logException($res->error);
