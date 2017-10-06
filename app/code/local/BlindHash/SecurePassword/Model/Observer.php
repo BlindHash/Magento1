@@ -93,10 +93,9 @@ class BlindHash_SecurePassword_Model_Observer
     }
 
     /**
-     * Verify Tap Link App Id if it is not valid then show error message 
-     * and dont allow to enable blindhash
+     * Verify Tap link App Id
      * 
-     * @param Mage_Core_Model_Observer $observer Observer with system config
+     * @param type $observer
      * @return void
      */
     public function verifyTapLinkApi($observer)
@@ -104,6 +103,7 @@ class BlindHash_SecurePassword_Model_Observer
         if (!(boolean) Mage::getStoreConfig(
                 'blindhash/securepassword/enabled'
             )) {
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');
             return;
         }
         $apiKey = Mage::getStoreConfig('blindhash/securepassword/api_key');
@@ -117,9 +117,16 @@ class BlindHash_SecurePassword_Model_Observer
 
         $output = curl_exec($ch);
         curl_close($ch);
+
         if (empty(json_decode($output, true))) {
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', 0);
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_key', '');
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');
             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Api key is not valid.'), true);
+        } else {
+            $result = json_decode($output, true);
+            if ($result['publicKey'])
+                Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', $result['publicKey']);
         }
     }
 }
