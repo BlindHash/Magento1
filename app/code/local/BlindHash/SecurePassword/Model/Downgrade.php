@@ -1,6 +1,6 @@
 <?php
 
-class BlindHash_SecurePassword_Model_Downgrade extends Mage_Core_Model_Abstract
+class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_Model_Encryption
 {
 
     protected $resource;
@@ -8,7 +8,7 @@ class BlindHash_SecurePassword_Model_Downgrade extends Mage_Core_Model_Abstract
     protected $write;
     protected $table;
 
-    public function _construct()
+    public function __construct()
     {
         $this->resource = Mage::getSingleton('core/resource');
         $this->read = $this->resource->getConnection('core_read');
@@ -25,7 +25,7 @@ class BlindHash_SecurePassword_Model_Downgrade extends Mage_Core_Model_Abstract
     public function DowngradeAllCustomerPasswords()
     {
         $attribute = Mage::getModel('eav/config')->getAttribute('customer', 'password_hash');
-        $blindhashPrefix = BlindHash_SecurePassword_Model_Encryption::PREFIX . BlindHash_SecurePassword_Model_Encryption::DELIMITER;
+        $blindhashPrefix = self::PREFIX . self::DELIMITER;
         $query = "SELECT entity_id,value AS hash FROM {$this->table} WHERE attribute_id = {$attribute->getId()} AND value like '$blindhashPrefix%' ";
         $passwordList = $this->read->fetchAll($query);
         $count = 0;
@@ -53,7 +53,7 @@ class BlindHash_SecurePassword_Model_Downgrade extends Mage_Core_Model_Abstract
      */
     protected function _downgradeToOldHash($hash, $customerId)
     {
-        $hashArr = explode(BlindHash_SecurePassword_Model_Encryption::DELIMITER, $hash);
+        $hashArr = explode(self::DELIMITER, $hash);
         if ((count($hashArr) < 5)) {
             return;
         }
