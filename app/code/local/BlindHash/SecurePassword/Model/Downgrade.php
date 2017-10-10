@@ -57,7 +57,14 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
         if ((count($hashArr) < 5)) {
             return;
         }
-        $OldHash = end($hashArr);
-        return $this->write->update($this->table, array('value' => $OldHash), array('entity_id = ?' => $customerId));
+
+        list($T, $expectedHash2Hex, $salt, $version, $hash1) = $hashArr;
+
+        if ($version == self::OLD_HASHING_WITH_SALT_VERSION) {
+            $salt = $this->decrypt($salt);
+            $hash1 .= $salt;
+        }
+        
+        return $this->write->update($this->table, array('value' => $hash1), array('entity_id = ?' => $customerId));
     }
 }
