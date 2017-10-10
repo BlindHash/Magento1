@@ -5,6 +5,14 @@ class BlindHash_SecurePassword_Adminhtml_UpgradeController extends Mage_Adminhtm
 
     public function hashesAction()
     {
+        if (!(boolean) Mage::getStoreConfig(
+                'blindhash/securepassword/enabled'
+            )) {
+            Mage::getSingleton('adminhtml/session')->addNotice(Mage::helper('blindhash_securepassword')->__('Please enable Blind hash Hashing before upgrade.'));
+            $this->_redirect('adminhtml/system_config/edit', array('section' => 'blindhash'));
+            return;
+        }
+        
         $upgradeModel = Mage::getModel('blindhash_securepassword/upgrade');
         $count = $upgradeModel->UpgradeAllCustomerPasswords();
         if ($count) {
