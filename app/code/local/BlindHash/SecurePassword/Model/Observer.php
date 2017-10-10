@@ -103,7 +103,16 @@ class BlindHash_SecurePassword_Model_Observer
         if (!(boolean) Mage::getStoreConfig(
                 'blindhash/securepassword/enabled'
             )) {
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');
+            $blindHashesCount = Mage::getModel('blindhash_securepassword/hashes')->getTotalBlindHashes();
+            
+            if($blindHashesCount){
+                Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', 1);
+                Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Please downgrade all the blind hashes and then disable hashing.'), true);
+                return;
+            }
+            
+            
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');            
             return;
         }
         $apiKey = Mage::getStoreConfig('blindhash/securepassword/api_key');
