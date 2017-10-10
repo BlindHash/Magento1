@@ -128,9 +128,11 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
 
         if ($version == self::OLD_HASHING_WITH_SALT_VERSION) {
             $password = parent::getHash($password, $salt);
+            $hashMage = @explode(BlindHash_SecurePassword_Model_Encryption::OLD_DELIMITER, $password);
+            $password = $hashMage[0];
         }
 
-        $res = $this->taplink->verifyPassword(hash_hmac(self::HASH_ALGORITHM, $password, $salt), $expectedHash2Hex, $version);
+        $res = $this->taplink->verifyPassword(hash_hmac(self::HASH_ALGORITHM, $password, $salt), $expectedHash2Hex);
         if ($res->error) {
             Mage::logException($res->error);
         }
