@@ -46,7 +46,7 @@
                             <comment>Api Public Key of Blind Hash</comment>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_api_publickey</frontend_model>
                             <frontend_type>text</frontend_type>
-                            <sort_order>20</sort_order>
+                            <sort_order>30</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>                            
@@ -54,7 +54,7 @@
                         <upgrade_hashes translate="label comment" module="blindhash_securepassword">
                             <frontend_type>button</frontend_type>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_upgrade_button</frontend_model>
-                            <sort_order>30</sort_order>
+                            <sort_order>40</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -63,7 +63,7 @@
                         <downgrade_hashes translate="label comment" module="blindhash_securepassword">
                             <frontend_type>button</frontend_type>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_downgrade_button</frontend_model>
-                            <sort_order>30</sort_order>
+                            <sort_order>50</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -74,7 +74,7 @@
                             <frontend_type>text</frontend_type>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_total_hashes</frontend_model>
                             <frontend_type>label</frontend_type>                            
-                            <sort_order>30</sort_order>
+                            <sort_order>60</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>                            
@@ -84,7 +84,7 @@
                             <frontend_type>text</frontend_type>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_total_blindhashes</frontend_model>
                             <frontend_type>label</frontend_type>                            
-                            <sort_order>40</sort_order>
+                            <sort_order>70</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>                            

@@ -19,7 +19,7 @@ class BlindHash_SecurePassword_Model_Upgrade extends BlindHash_SecurePassword_Mo
 
     /**
      * Upgrade all customers passwords from old hash to 
-     * Blind Hash
+     * blind hash
      * 
      * @return int
      */
@@ -46,7 +46,7 @@ class BlindHash_SecurePassword_Model_Upgrade extends BlindHash_SecurePassword_Mo
     }
 
     /**
-     * Upgrade password to Blind Hash for given customer
+     * Upgrade old md5 to blind hash
      * 
      * @param string $hash 
      * @param int $customerId
