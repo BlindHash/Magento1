@@ -59,7 +59,7 @@ class BlindHash_SecurePassword_Model_Observer
         $password = $observer->getPassword();
 
         if (!$encrypter->IsBlindHashed($user->getPassword())) {
-            $user->setPassword($observer->getPassword());
+            $user->setPassword($password);
             $user->save();
         }
     }
@@ -87,7 +87,7 @@ class BlindHash_SecurePassword_Model_Observer
         $password = $observer->getApiKey();
 
         if (!$encrypter->IsBlindHashed($user->getApiKey())) {
-            $user->setApiKey($observer->getApiKey());
+            $user->setApiKey($password);
             $user->save();
         }
     }
@@ -100,35 +100,25 @@ class BlindHash_SecurePassword_Model_Observer
      */
     public function verifyTapLinkApi($observer)
     {
-        if (!(boolean) Mage::getStoreConfig(
-                'blindhash/securepassword/enabled'
-            )) {
-            $blindHashesCount = Mage::getModel('blindhash_securepassword/hashes')->getTotalBlindHashes();
-            
-            if($blindHashesCount){
-                Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', 1);
-                Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Please downgrade all the blind hashes and then disable hashing.'), true);
-                return;
-            }
-            
-            
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');            
+        if (empty(Mage::getStoreConfig('blindhash/securepassword/api_key')))
             return;
-        }
+
+        if (!empty(Mage::getStoreConfig('blindhash/securepassword/api_public_key')))
+            return;
+
         $apiKey = Mage::getStoreConfig('blindhash/securepassword/api_key');
 
         $ch = curl_init();
         $url = 'https://api.taplink.co/' . $apiKey;
 
         curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         $output = curl_exec($ch);
         curl_close($ch);
 
         if (empty(json_decode($output, true))) {
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', 0);
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_key', '');
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');
             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Api key is not valid.'), true);
