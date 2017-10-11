@@ -6,15 +6,26 @@ class BlindHash_SecurePassword_Model_Upgrade extends BlindHash_SecurePassword_Mo
     protected $resource;
     protected $read;
     protected $write;
-    protected $table;
+    protected $customerPasswordTable;
+    protected $adminPasswordTable;
+    protected $apiPasswordTable;
+
+    const LIMIT = 100;
 
     public function __construct()
     {
         $this->resource = Mage::getSingleton('core/resource');
         $this->read = $this->resource->getConnection('core_read');
         $this->write = $this->resource->getConnection('core_write');
-        $this->table = $this->resource->getTableName('customer_entity_text');
+        $this->customerPasswordTable = $this->resource->getTableName('customer_entity_text');
+        $this->adminPasswordTable = $this->resource->getTableName('admin_user');
+        $this->apiPasswordTable = $this->resource->getTableName('api_user');
         parent::__construct();
+    }
+
+    public function upgradeAllPasswords()
+    {
+        
     }
 
     /**
@@ -27,35 +38,65 @@ class BlindHash_SecurePassword_Model_Upgrade extends BlindHash_SecurePassword_Mo
     {
         $attribute = Mage::getModel('eav/config')->getAttribute('customer', 'password_hash');
         $blindhashPrefix = self::PREFIX . self::DELIMITER;
-        $query = "SELECT entity_id,value AS hash FROM {$this->table} WHERE attribute_id = {$attribute->getId()} AND value NOT like '$blindhashPrefix%' AND value <> '' ";
-        $passwordList = $this->read->fetchAll($query);
+        $limit = self::LIMIT;
+        $keepRunning = true;
         $count = 0;
+        while (true) {
 
-        if (!$passwordList)
-            return;
+            $query = "SELECT entity_id,value AS hash FROM {$this->customerPasswordTable} WHERE attribute_id = {$attribute->getId()} AND value NOT like '$blindhashPrefix%' AND value <> '' limit {$limit}";
+            $passwordList = $this->read->fetchAll($query);
 
-        foreach ($passwordList as $password) {
-            $customerId = $password['entity_id'];
-            $hash = $password['hash'];
-            if ($this->_upgradeToBlindHash($hash, $customerId)) {
-                $count++;
+            if (!$passwordList)
+                break;
+
+            foreach ($passwordList as $password) {
+                $customerId = $password['entity_id'];
+                $hash = $password['hash'];
+                if ($this->_upgradeCustomerHash($hash, $customerId)) {
+                    $count++;
+                }
             }
         }
 
         return $count;
     }
 
+    protected function upgradeAllAdminPasswords()
+    {
+        // TODO Upgrade all admin user passwords
+    }
+
+    protected function upgradeAllApiPasswords()
+    {
+        //TODO Upgrade all api passwords
+    }
+
     /**
-     * Upgrade old md5 to blind hash
+     * Upgrade Customer Password to blindhash
+     * 
+     * @param type $hash
+     * @param type $customerId
+     * @return boolean
+     */
+    protected function _upgradeCustomerHash($hash, $customerId)
+    {
+        $hashUpdated = $this->_convertToBlindHash($hash, $customerId);
+        if (!empty($hashUpdated))
+            return $this->write->update($this->customerPasswordTable, array('value' => $hashUpdated), array('entity_id = ?' => $customerId));
+        else
+            return false;
+    }
+
+    /**
+     * Convert old hash to blind hash
      * 
      * @param string $hash 
      * @param int $customerId
-     * @return boolean
+     * @return string
      */
-    protected function _upgradeToBlindHash($hash, $customerId)
+    protected function _convertToBlindHash($hash, $customerId)
     {
         $hashUpdated = '';
-
         $hashArr = explode(BlindHash_SecurePassword_Model_Encryption::OLD_DELIMITER, $hash);
 
         switch (count($hashArr)) {
@@ -66,7 +107,6 @@ class BlindHash_SecurePassword_Model_Upgrade extends BlindHash_SecurePassword_Mo
                 $hashUpdated = $this->_blindhash($hashArr[0], $hashArr[1], self::OLD_HASHING_WITH_SALT_VERSION);
                 break;
         }
-        if (!empty($hashUpdated))
-            return $this->write->update($this->table, array('value' => $hashUpdated), array('entity_id = ?' => $customerId));
+        return $hashUpdated;
     }
 }
