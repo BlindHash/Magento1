@@ -48,10 +48,6 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
             return parent::getHash($plainText, $salt);
         }
 
-        if ($salt === false) {
-            return $this->hash($plainText);
-        }
-
         if ($salt === true) {
             $salt = self::DEFAULT_SALT_LENGTH;
         }
@@ -60,26 +56,28 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
             $salt = $this->_getRandomString($salt);
         }
 
-        return $this->_blindhash($plainText, $salt);
-    }
-
-    protected function _blindhash($plainText, $salt, $version = self::NEW_HASHING_VERSION)
-    {
-
         // The hash to send to TapLink is the SHA512-HMAC(salt, password)
         $res = $this->taplink->newPassword(hash_hmac(self::HASH_ALGORITHM, $plainText, $salt));
         if ($res->error) {
             Mage::logException($res->error);
         }
 
-        if ($version == self::NEW_HASHING_VERSION) {
-            // Adding magento hash as last parameter
-            $hash1 = parent::getHash($plainText, $salt);
-        } else {
-            $hash1 = $plainText;
+        // Adding magento hash as last parameter
+        $hash1 = parent::getHash($plainText, $salt);
+
+        return @implode(self::DELIMITER, [self::PREFIX, $res->hash2Hex, $salt, $version, $hash1]);
+    }
+
+    protected function _blindhash($hash, $salt, $version = self::NEW_HASHING_VERSION)
+    {
+        // The hash to send to TapLink is the SHA512-HMAC(salt, password)
+        $res = $this->taplink->newPassword(hash_hmac(self::HASH_ALGORITHM, $hash, $salt));
+
+        if ($res->error) {
+            Mage::logException($res->error);
         }
 
-        return @implode(self::DELIMITER, [self::PREFIX, $this->encrypt($res->hash2Hex), $this->encrypt($salt), $version, $hash1]);
+        return @implode(self::DELIMITER, [self::PREFIX, $res->hash2Hex, $salt, $version, $hash]);
     }
 
     /**
@@ -104,32 +102,20 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
      */
     public function validateHash($password, $hash)
     {
-
-        if (!(boolean) Mage::getStoreConfig(
-                'blindhash/securepassword/enabled'
-            )) {
-            return parent::validateHash($password, $hash);
-        }
-
         if (!$this->IsBlindHashed($hash)) {
             return parent::validateHash($password, $hash);
         }
 
         // Get the pieces of the puzzle.
         $hashArr = explode(self::DELIMITER, $hash);
-        list($T, $expectedHash2Hex, $salt, $version, $hash1) = $hashArr;
-
-        $expectedHash2Hex = $this->decrypt($expectedHash2Hex);
-        $salt = $this->decrypt($salt);
+        list($T, $expectedHash2Hex, $salt, $version) = $hashArr;
 
         if ($version == self::OLD_HASHING_WITHOUT_SALT_VERSION) {
             $password = parent::getHash($password);
         }
 
         if ($version == self::OLD_HASHING_WITH_SALT_VERSION) {
-            $password = parent::getHash($password, $salt);
-            $hashMage = @explode(BlindHash_SecurePassword_Model_Encryption::OLD_DELIMITER, $password);
-            $password = $hashMage[0];
+            $password = @explode(BlindHash_SecurePassword_Model_Encryption::OLD_DELIMITER, parent::getHash($password, $salt))[0];
         }
 
         $res = $this->taplink->verifyPassword(hash_hmac(self::HASH_ALGORITHM, $password, $salt), $expectedHash2Hex);
