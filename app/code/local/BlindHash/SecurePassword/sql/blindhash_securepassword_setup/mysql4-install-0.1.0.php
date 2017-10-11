@@ -19,6 +19,7 @@ if ('text' !== $currentAttribute->getBackendType()) {
     $installer->getConnection()->beginTransaction();
     try {
         $newAttribute = clone $currentAttribute;
+        // Change Backend Type to Text
         $newAttribute->setBackendType('text');
 
         $currentTable = $currentAttribute->getBackend()->getTable();
