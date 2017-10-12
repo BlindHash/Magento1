@@ -6,52 +6,101 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
     protected $resource;
     protected $read;
     protected $write;
-    protected $table;
+    protected $customerPasswordTable;
+    protected $adminPasswordTable;
+    protected $apiPasswordTable;
+    protected $prefix = self::PREFIX . self::DELIMITER;
+    protected $count = 0;
+
+    const LIMIT = 100;
 
     public function __construct()
     {
         $this->resource = Mage::getSingleton('core/resource');
         $this->read = $this->resource->getConnection('core_read');
         $this->write = $this->resource->getConnection('core_write');
-        $this->table = $this->resource->getTableName('customer_entity_text');
+        $this->customerPasswordTable = $this->resource->getTableName('customer_entity_text');
+        $this->adminPasswordTable = $this->resource->getTableName('admin_user');
+        $this->apiPasswordTable = $this->resource->getTableName('api_user');
     }
 
     /**
-     * Downgrade all customers passwords from blind hash to 
-     * old md5 hash back again
-     * 
+     * Downgrade all blind hashes to simple magento hashes
      * @return int
      */
-    public function DowngradeAllCustomerPasswords()
+    public function downgradeAllPasswords()
     {
-        $attribute = Mage::getModel('eav/config')->getAttribute('customer', 'password_hash');
-        $blindhashPrefix = self::PREFIX . self::DELIMITER;
-        $query = "SELECT entity_id,value AS hash FROM {$this->table} WHERE attribute_id = {$attribute->getId()} AND value like '$blindhashPrefix%' ";
+        $this->downgradeAllAdminPasswords();
+        $this->downgradeAllApiPasswords();
+        $this->downgradeAllCustomerPasswords();
+        return $this->count;
+    }
+
+    /**
+     * Downgrade all blina hashes of admin users
+     * @return int
+     */
+    protected function downgradeAllAdminPasswords()
+    {
+        $query = "SELECT user_id,password AS hash FROM {$this->adminPasswordTable} WHERE password like '$this->prefix%' ";
         $passwordList = $this->read->fetchAll($query);
-        $count = 0;
 
         if (!$passwordList)
             return;
 
-        foreach ($passwordList as $password) {
-            $customerId = $password['entity_id'];
-            $hash = $password['hash'];
-            if ($this->_downgradeToOldHash($hash, $customerId)) {
-                $count++;
-            }
-        }
-
-        return $count;
+        $count = 0;
+        foreach ($passwordList as $password)
+            $this->_convertToOldHash($password['hash'], $password['user_id'], $this->adminPasswordTable, 'password', 'user_id');
     }
 
     /**
-     * Downgrade password to old md5 for given customer
-     * 
-     * @param string $hash 
-     * @param int $customerId
-     * @return boolean
+     * Downgrade all blina hashes of api users
+     * @return int
      */
-    protected function _downgradeToOldHash($hash, $customerId)
+    protected function downgradeAllApiPasswords()
+    {
+        $query = "SELECT user_id,api_key AS hash FROM {$this->apiPasswordTable} WHERE api_key like '$this->prefix%' ";
+        $passwordList = $this->read->fetchAll($query);
+
+        if (!$passwordList)
+            return;
+
+        foreach ($passwordList as $password)
+            $this->_convertToOldHash($password['hash'], $password['user_id'], $this->apiPasswordTable, 'api_key', 'user_id');
+    }
+
+    /**
+     * Downgrade all blina hashes of customers
+     * @return int
+     */
+    public function downgradeAllCustomerPasswords()
+    {
+        $attribute = Mage::getModel('eav/config')->getAttribute('customer', 'password_hash');
+        $limit = self::LIMIT;
+        while (true) {
+
+            $query = "SELECT entity_id,value AS hash FROM {$this->customerPasswordTable} WHERE attribute_id = {$attribute->getId()} AND value like '$this->prefix%' limit {$limit}";
+            $passwordList = $this->read->fetchAll($query);
+
+            if (!$passwordList)
+                break;
+
+            foreach ($passwordList as $password)
+                $this->_convertToOldHash($password['hash'], $password['entity_id'], $this->customerPasswordTable, 'value', 'entity_id');
+        }
+    }
+
+    /**
+     * Downgrade password from blindhash to old md5 and update to DB
+     * 
+     * @param string $hash
+     * @param int $id
+     * @param string $table
+     * @param string $field1
+     * @param string $field2
+     * @return void
+     */
+    protected function _convertToOldHash($hash, $id, $table, $field1, $field2)
     {
         $hashArr = explode(self::DELIMITER, $hash);
         if ((count($hashArr) < 5)) {
@@ -64,6 +113,7 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
             $hash1 .= ':' . $salt;
         }
 
-        return $this->write->update($this->table, array('value' => $hash1), array('entity_id = ?' => $customerId));
+        if ($this->write->update($table, array($field1 => $hash1), array($field2 . ' = ?' => $id)))
+            $this->count++;
     }
 }
