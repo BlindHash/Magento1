@@ -13,8 +13,7 @@ class BlindHash_SecurePassword_Adminhtml_UpgradeController extends Mage_Adminhtm
             return;
         }
         
-        $upgradeModel = Mage::getModel('blindhash_securepassword/upgrade');
-        $count = $upgradeModel->UpgradeAllCustomerPasswords();
+        $count = Mage::getModel('blindhash_securepassword/upgrade')->upgradeAllPasswords();
         if ($count) {
             Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('blindhash_securepassword')->__('%s password(s) has been upgraded to blind hash.', $count));
         } else {

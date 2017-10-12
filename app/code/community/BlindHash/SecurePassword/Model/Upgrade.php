@@ -9,6 +9,8 @@ class BlindHash_SecurePassword_Model_Upgrade extends BlindHash_SecurePassword_Mo
     protected $customerPasswordTable;
     protected $adminPasswordTable;
     protected $apiPasswordTable;
+    protected $prefix = self::PREFIX . self::DELIMITER;
+    protected $count = 0;
 
     const LIMIT = 100;
 
@@ -23,78 +25,82 @@ class BlindHash_SecurePassword_Model_Upgrade extends BlindHash_SecurePassword_Mo
         parent::__construct();
     }
 
+    /**
+     * Upgrade all simple hashes to blind hashes
+     * @return int
+     */
     public function upgradeAllPasswords()
     {
-        
+        $this->upgradeAllAdminPasswords();
+        $this->upgradeAllApiPasswords();
+        $this->upgradeAllCustomerPasswords();
+        return $this->count;
     }
 
     /**
-     * Upgrade all customers passwords from old hash to 
-     * blind hash
-     * 
+     * Upgrade all simple hashes to blind hashes of admin users
      * @return int
      */
-    public function UpgradeAllCustomerPasswords()
+    protected function upgradeAllAdminPasswords()
+    {
+        $query = "SELECT user_id,password AS hash FROM {$this->adminPasswordTable} WHERE password NOT like '$this->prefix%' AND password <> ''";
+        $passwordList = $this->read->fetchAll($query);
+
+        if (!$passwordList)
+            return;
+
+        foreach ($passwordList as $password)
+            $this->_convertToBlindHash($password['hash'], $password['user_id'], $this->adminPasswordTable, 'password', 'user_id');
+    }
+
+    /**
+     * Upgrade all simple hashes to blind hashes of api users
+     * @return int
+     */
+    protected function upgradeAllApiPasswords()
+    {
+        $query = "SELECT user_id,api_key AS hash FROM {$this->apiPasswordTable} WHERE api_key NOT like '$this->prefix%' AND api_key <> ''";
+        $passwordList = $this->read->fetchAll($query);
+
+        if (!$passwordList)
+            return;
+
+        foreach ($passwordList as $password)
+            $this->_convertToBlindHash($password['hash'], $password['user_id'], $this->apiPasswordTable, 'api_key', 'user_id');
+    }
+
+    /**
+     * Upgrade all simple hashes to blind hashes of customers
+     * @return int
+     */
+    protected function upgradeAllCustomerPasswords()
     {
         $attribute = Mage::getModel('eav/config')->getAttribute('customer', 'password_hash');
-        $blindhashPrefix = self::PREFIX . self::DELIMITER;
         $limit = self::LIMIT;
-        $keepRunning = true;
-        $count = 0;
         while (true) {
 
-            $query = "SELECT entity_id,value AS hash FROM {$this->customerPasswordTable} WHERE attribute_id = {$attribute->getId()} AND value NOT like '$blindhashPrefix%' AND value <> '' limit {$limit}";
+            $query = "SELECT entity_id,value AS hash FROM {$this->customerPasswordTable} WHERE attribute_id = {$attribute->getId()} AND value NOT like '$this->prefix%' AND value <> '' limit {$limit}";
             $passwordList = $this->read->fetchAll($query);
 
             if (!$passwordList)
                 break;
 
-            foreach ($passwordList as $password) {
-                $customerId = $password['entity_id'];
-                $hash = $password['hash'];
-                if ($this->_upgradeCustomerHash($hash, $customerId)) {
-                    $count++;
-                }
-            }
+            foreach ($passwordList as $password)
+                $this->_convertToBlindHash($password['hash'], $password['entity_id'], $this->customerPasswordTable, 'value', 'entity_id');
         }
-
-        return $count;
-    }
-
-    protected function upgradeAllAdminPasswords()
-    {
-        // TODO Upgrade all admin user passwords
-    }
-
-    protected function upgradeAllApiPasswords()
-    {
-        //TODO Upgrade all api passwords
     }
 
     /**
-     * Upgrade Customer Password to blindhash
+     * Convert old hash to blind hash and save to DB
      * 
-     * @param type $hash
-     * @param type $customerId
-     * @return boolean
+     * @param string $hash
+     * @param int $id
+     * @param string $table
+     * @param string $field1
+     * @param string $field2
+     * @return void
      */
-    protected function _upgradeCustomerHash($hash, $customerId)
-    {
-        $hashUpdated = $this->_convertToBlindHash($hash, $customerId);
-        if (!empty($hashUpdated))
-            return $this->write->update($this->customerPasswordTable, array('value' => $hashUpdated), array('entity_id = ?' => $customerId));
-        else
-            return false;
-    }
-
-    /**
-     * Convert old hash to blind hash
-     * 
-     * @param string $hash 
-     * @param int $customerId
-     * @return string
-     */
-    protected function _convertToBlindHash($hash, $customerId)
+    protected function _convertToBlindHash($hash, $id, $table, $field1, $field2)
     {
         $hashUpdated = '';
         $hashArr = explode(BlindHash_SecurePassword_Model_Encryption::OLD_DELIMITER, $hash);
@@ -107,6 +113,11 @@ class BlindHash_SecurePassword_Model_Upgrade extends BlindHash_SecurePassword_Mo
                 $hashUpdated = $this->_blindhash($hashArr[0], $hashArr[1], self::OLD_HASHING_WITH_SALT_VERSION);
                 break;
         }
-        return $hashUpdated;
+
+        if (empty($hashUpdated))
+            return;
+
+        if ($this->write->update($table, array($field1 => $hashUpdated), array($field2 . ' = ?' => $id)))
+            $this->count++;
     }
 }
