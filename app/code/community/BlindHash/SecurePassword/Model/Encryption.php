@@ -132,19 +132,22 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
      * @param null|string $chars
      * @return string
      */
-    protected function _getRandomString($length, $chars = null)
+    protected function _getRandomString($length)
     {
         $str = '';
-        if (null === $chars) {
-            $chars = 'abcdef0123456789';
-        }
 
-        mt_srand();
-        for ($i = 0, $lc = strlen($chars) - 1; $i < $length; $i++) {
-            $rand = mt_rand(0, $lc); // random integer from 0 to $lc
-            $str .= $chars[$rand]; // random character in $chars
+        if (function_exists('random_bytes')) {
+            $str = bin2hex(random_bytes($length));
+        } elseif (function_exists('openssl_random_pseudo_bytes')) {
+            // use openssl lib if it is installed
+            $str = bin2hex(openssl_random_pseudo_bytes($length));
+        } elseif ($fp = @fopen('/dev/urandom', 'rb')) {
+            // attempt to use /dev/urandom if it exists but openssl isn't available
+            $str = bin2hex(@fread($fp, $length));
+            fclose($fp);
+        } else {
+            Mage::logException("Can't generate cryptographic radom string for hashing.");
         }
-
         return $str;
     }
 }
