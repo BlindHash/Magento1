@@ -70,8 +70,40 @@ class Client
         $res = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ($status !== 200) {
-            return new Response(['err' => $res]);
+            return new Response(['err' => $res, 'errCode' => curl_errno($ch), 'errMsg' => curl_error($ch)]);
         }
         return new Response(json_decode($res, true));
+    }
+
+    public function isLocalMachine()
+    {
+        $whitelist = array(
+            '127.0.0.1',
+            '::1'
+        );
+        return (in_array($_SERVER['REMOTE_ADDR'], $whitelist)) ? true : false;
+    }
+
+    public function getPublicKey()
+    {
+        $ch = curl_init($this->makeURL($this->appID));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $verifyer = ($this->isLocalMachine()) ? false : true;
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verifyer);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'User-Agent: ' . $this->userAgent,
+            'Accept: application/json',
+        ));
+        $res = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if ($status !== 200) {
+            return;
+        }
+        $res = json_decode($res, true);
+        if (isset($res['publicKey']))
+            return $res['publicKey'];
+        else
+            return;
     }
 }

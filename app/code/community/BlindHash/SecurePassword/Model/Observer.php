@@ -105,27 +105,15 @@ class BlindHash_SecurePassword_Model_Observer
 
         if (!empty(Mage::getStoreConfig('blindhash/securepassword/api_public_key')))
             return;
+        
+        $publicKey = Mage::getModel('blindhash_securepassword/encryption')->getPublicKey();
 
-        $apiKey = Mage::getStoreConfig('blindhash/securepassword/api_key');
-
-        $ch = curl_init();
-        $url = 'https://api.taplink.co/' . $apiKey;
-
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        $output = curl_exec($ch);
-        curl_close($ch);
-
-        if (empty(json_decode($output, true))) {
+        if ($publicKey) {
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', $publicKey);
+        } else {
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_key', '');
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');
             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Api key is not valid.'), true);
-        } else {
-            $result = json_decode($output, true);
-            if ($result['publicKey'])
-                Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', $result['publicKey']);
         }
     }
 }

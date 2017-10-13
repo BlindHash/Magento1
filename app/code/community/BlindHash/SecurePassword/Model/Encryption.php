@@ -150,4 +150,9 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
         }
         return $str;
     }
+
+    public function getPublicKey()
+    {
+        return $this->taplink->getPublicKey();
+    }
 }

@@ -3,7 +3,9 @@
 class Response
 {
 
-    public $err;
+    public $err;    
+    public $errCode;
+    public $errMsg;
     public $matched;
     private $vid;
     private $s2;
