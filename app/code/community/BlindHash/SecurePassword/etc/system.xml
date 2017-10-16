@@ -51,6 +51,15 @@
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>                            
                         </api_public_key>  
+                        <encryption_available>
+                            <label>Encryption Available</label>
+                            <frontend_model>blindhash_securepassword/adminhtml_system_config_encryption_available</frontend_model>
+                            <frontend_type>label</frontend_type>                            
+                            <sort_order>30</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>                            
+                        </encryption_available> 
                         <upgrade_hashes translate="label comment" module="blindhash_securepassword">
                             <frontend_type>button</frontend_type>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_upgrade_button</frontend_model>
@@ -69,9 +78,18 @@
                             <show_in_store>0</show_in_store>
                             <comment>Downgrade hashes will revert magento old way hashing passwords back again.</comment>
                         </downgrade_hashes>      
+                        
+                        <api_private_key>
+                            <!--<label>Total Hashes</label>-->
+                            <frontend_type>text</frontend_type>
+                            <sort_order>60</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>                            
+                            <comment><![CDATA[<script type="text/javascript">document.getElementById('blindhash_securepassword_api_private_key').style.display = 'none'; </script>]]></comment>
+                        </api_private_key> 
                         <total_hashes>
                             <label>Total Hashes</label>
-                            <frontend_type>text</frontend_type>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_total_hashes</frontend_model>
                             <frontend_type>label</frontend_type>                            
                             <sort_order>60</sort_order>
@@ -81,7 +99,6 @@
                         </total_hashes> 
                         <total_blindhashes>
                             <label>BlindHash Protected Hashes</label>
-                            <frontend_type>text</frontend_type>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_total_blindhashes</frontend_model>
                             <frontend_type>label</frontend_type>                            
                             <sort_order>70</sort_order>

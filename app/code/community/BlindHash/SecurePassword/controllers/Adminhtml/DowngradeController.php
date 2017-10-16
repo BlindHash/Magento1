@@ -5,7 +5,11 @@ class BlindHash_SecurePassword_Adminhtml_DowngradeController extends Mage_Adminh
 
     public function hashesAction()
     {
-        $count = Mage::getModel('blindhash_securepassword/downgrade')->downgradeAllPasswords();
+        if ($privateKey = $this->getRequest()->getParam('private_key'))
+            $count = Mage::getModel('blindhash_securepassword/downgrade')->downgradeAllPasswords($privateKey);
+        else
+            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Please provide private key to downgrade blindhashes.'));
+
         if ($count) {
             Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('blindhash_securepassword')->__('%s password(s) has been downgraded to old hash.', $count));
         } else {

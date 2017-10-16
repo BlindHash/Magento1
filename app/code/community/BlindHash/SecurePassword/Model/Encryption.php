@@ -19,11 +19,13 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
     //Instance of BlindHash API
 
     protected $taplink;
+    protected $publicKeyHex;
 
     public function __construct()
     {
         //Get Api key from System Config
         $appId = Mage::getStoreConfig('blindhash/securepassword/api_key');
+        $this->publicKeyHex = Mage::getStoreConfig('blindhash/securepassword/api_public_key');
         $this->taplink = new Client($appId);
     }
 
@@ -65,6 +67,9 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
         // Adding magento hash as last parameter
         $hash1 = parent::getHash($plainText, $salt);
 
+        //Encrypt hash1 with libsodium
+        $hash1 = $this->taplink->encrypt($this->publicKeyHex, $hash1);
+
         return @implode(self::DELIMITER, [self::PREFIX, $res->hash2Hex, $salt, $version, $hash1]);
     }
 
@@ -76,6 +81,9 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
         if ($res->error) {
             Mage::logException($res->error);
         }
+
+        //Encrypt hash with libsodium
+        $hash = $this->taplink->encrypt($this->publicKeyHex, $hash);
 
         return @implode(self::DELIMITER, [self::PREFIX, $res->hash2Hex, $salt, $version, $hash]);
     }
@@ -154,5 +162,10 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
     public function getPublicKey()
     {
         return $this->taplink->getPublicKey();
+    }
+    
+    public function encrypTest()
+    {
+        return $this->taplink->encryptTest();
     }
 }

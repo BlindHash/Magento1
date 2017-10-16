@@ -11,6 +11,7 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
     protected $apiPasswordTable;
     protected $prefix = self::PREFIX . self::DELIMITER;
     protected $count = 0;
+    protected $privateKey;
 
     const LIMIT = 100;
 
@@ -22,14 +23,16 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
         $this->customerPasswordTable = $this->resource->getTableName('customer_entity_text');
         $this->adminPasswordTable = $this->resource->getTableName('admin_user');
         $this->apiPasswordTable = $this->resource->getTableName('api_user');
+        parent::__construct();
     }
 
     /**
      * Downgrade all blind hashes to simple magento hashes
      * @return int
      */
-    public function downgradeAllPasswords()
+    public function downgradeAllPasswords($privateKey)
     {
+        $this->privateKey = $privateKey;
         $this->downgradeAllAdminPasswords();
         $this->downgradeAllApiPasswords();
         $this->downgradeAllCustomerPasswords();
@@ -108,6 +111,13 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
         }
 
         list($T, $expectedHash2Hex, $salt, $version, $hash1) = $hashArr;
+
+        try {
+            $hash1 = $this->taplink->decrypt($this->publicKeyHex, $this->privateKey, $hash1);
+        } catch (Exception $ex) {
+            Mage::throwException($ex->getMessage());
+        }
+
 
         if ($version == self::OLD_HASHING_WITH_SALT_VERSION) {
             $hash1 .= ':' . $salt;

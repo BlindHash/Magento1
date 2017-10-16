@@ -1,4 +1,7 @@
 <?php
+require 'sodium_compat/autoload.php';
+
+use ParagonIE_Sodium_Compat;
 
 class Client
 {
@@ -105,5 +108,33 @@ class Client
             return $res['publicKey'];
         else
             return;
+    }
+
+    public function encrypt($publicKeyHex, $hashHex)
+    {
+        $crypt = ParagonIE_Sodium_Compat::crypto_box_seal(hex2bin($hashHex), hex2bin($publicKeyHex));
+        return bin2hex($crypt);
+    }
+
+    public function decrypt($publicKeyHex, $privateKeyHex, $cryptHex)
+    {
+        $keypair = hex2bin($privateKeyHex . $publicKeyHex);
+        $decrypt = ParagonIE_Sodium_Compat::crypto_box_seal_open(hex2bin($cryptHex), $keypair);
+        return bin2hex($decrypt);
+    }
+
+    public function encryptTest()
+    {
+        $message = "This is a test.";
+        $keypair = hex2bin(
+            '15b36cb00213373fb3fb03958fb0cc0012ecaca112fd249d3cf0961e311caac9' .
+            'fb4cb34f74a928b79123333c1e63d991060244cda98affee14c3398c6d315574'
+        );
+        $publickey = hex2bin(
+            'fb4cb34f74a928b79123333c1e63d991060244cda98affee14c3398c6d315574'
+        );
+        $crypt = ParagonIE_Sodium_Compat::crypto_box_seal($message, $publickey);
+        $decrypt = ParagonIE_Sodium_Compat::crypto_box_seal_open($crypt, $keypair);
+        return strcmp($message, $decrypt) === 0;
     }
 }

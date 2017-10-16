@@ -105,15 +105,29 @@ class BlindHash_SecurePassword_Model_Observer
 
         if (!empty(Mage::getStoreConfig('blindhash/securepassword/api_public_key')))
             return;
-        
-        $publicKey = Mage::getModel('blindhash_securepassword/encryption')->getPublicKey();
 
-        if ($publicKey) {
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', $publicKey);
-        } else {
+        $encryptionModel = Mage::getModel('blindhash_securepassword/encryption');
+        $publicKey = $encryptionModel->getPublicKey();
+        $encryptTest = false;
+
+        if (empty($publicKey)) {
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', '');
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_key', '');
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/encryption_available', false);
             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Api key is not valid.'), true);
+            return;
+        }
+
+        $encryptTest = $encryptionModel->encrypTest();
+        Mage::getModel('core/config')->saveConfig('blindhash/securepassword/encryption_available', $encryptTest);
+
+
+        if ($encryptTest) {
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', $publicKey);
+        } else {
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', '');
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');
         }
     }
 }
