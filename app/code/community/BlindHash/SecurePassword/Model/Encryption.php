@@ -62,13 +62,16 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
         $res = $this->taplink->newPassword(hash_hmac(self::HASH_ALGORITHM, $plainText, $salt));
         if ($res->error) {
             Mage::logException($res->error);
+            return parent::getHash($plainText, $salt);
         }
 
         // Adding magento hash as last parameter
         $hash1 = parent::getHash($plainText, $salt);
 
         //Encrypt hash1 with libsodium
-        $hash1 = $this->taplink->encrypt($this->publicKeyHex, $hash1);
+        $hashOne = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash1)[0]);
+        $hashTwo = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash1)[1]);
+        $hash1 = $hashOne . ":" . $hashTwo;
 
         return @implode(self::DELIMITER, [self::PREFIX, $res->hash2Hex, $salt, $version, $hash1]);
     }
@@ -82,8 +85,13 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
             Mage::logException($res->error);
         }
 
-        //Encrypt hash with libsodium
-        $hash = $this->taplink->encrypt($this->publicKeyHex, $hash);
+        if ($version == self::OLD_HASHING_WITH_SALT_VERSION) {
+            //Encrypt hash with libsodium
+            $hash = $this->taplink->encrypt($this->publicKeyHex, $hash);
+            $hashOne = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash)[0]);
+            $hashTwo = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash)[1]);
+            $hash = $hashOne . ":" . $hashTwo;
+        }
 
         return @implode(self::DELIMITER, [self::PREFIX, $res->hash2Hex, $salt, $version, $hash]);
     }
@@ -163,7 +171,7 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
     {
         return $this->taplink->getPublicKey();
     }
-    
+
     public function encrypTest()
     {
         return $this->taplink->encryptTest();
