@@ -111,10 +111,10 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
         }
 
         list($T, $expectedHash2Hex, $salt, $version, $hash1Encrypted) = $hashArr;
-        
+
         $hash1 = $this->taplink->decrypt($this->publicKeyHex, $this->privateKey, $hash1Encrypted);
 
-        // If decryption fails then get back to admin with error 
+        // If decryption fails then get back to admin with error
         if ($hash1Encrypted && empty($hash1)) {
             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Not able to decrypt password.'));
             $url = Mage::helper("adminhtml")->getUrl('adminhtml/system_config/edit', array('section' => 'blindhash'));
@@ -124,7 +124,7 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
             exit;
         }
 
-        if ($version == self::OLD_HASHING_WITH_SALT_VERSION) {
+        if ($version != self::OLD_HASHING_WITHOUT_SALT_VERSION) {
             $hash1 .= ':' . $salt;
         }
 

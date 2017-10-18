@@ -69,9 +69,7 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
         $hash1 = parent::getHash($plainText, $salt);
 
         //Encrypt hash1 with libsodium
-        $hashOne = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash1)[0]);
-        $hashTwo = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash1)[1]);
-        $hash1 = $hashOne . ":" . $hashTwo;
+        $hash1 = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash1)[0]);
 
         return @implode(self::DELIMITER, [self::PREFIX, $res->hash2Hex, $salt, $version, $hash1]);
     }
@@ -87,11 +85,11 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
 
         if ($version == self::OLD_HASHING_WITH_SALT_VERSION) {
             //Encrypt hash with libsodium
+            $hash = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash)[0]);
+        } else {
             $hash = $this->taplink->encrypt($this->publicKeyHex, $hash);
-            $hashOne = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash)[0]);
-            $hashTwo = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash)[1]);
-            $hash = $hashOne . ":" . $hashTwo;
         }
+
 
         return @implode(self::DELIMITER, [self::PREFIX, $res->hash2Hex, $salt, $version, $hash]);
     }
