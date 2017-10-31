@@ -1,5 +1,6 @@
 <?php
-require 'sodium_compat/autoload.php';
+$ExternalLibPath = Mage::getModuleDir('', 'BlindHash_SecurePassword') . DS . 'lib' . DS;
+include_once $ExternalLibPath . "\sodium_compat\autoload.php";
 
 class Client
 {
