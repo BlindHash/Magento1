@@ -4,8 +4,6 @@ $ExternalLibPath = Mage::getModuleDir('', 'BlindHash_SecurePassword') . DS . 'li
 require_once $ExternalLibPath . 'Client.php';
 require_once $ExternalLibPath . 'Response.php';
 
-//require_once $ExternalLibPath . 'sodium_compat' . DS . 'autoload.php';
-
 class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encryption implements BlindHash_SecurePassword_Model_Encryption_Interface
 {
 
