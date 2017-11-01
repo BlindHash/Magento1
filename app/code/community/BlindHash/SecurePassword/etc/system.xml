@@ -76,17 +76,7 @@
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
                             <comment>Downgrade Hashes will restore legacy hashes and disable BlindHash security on your hashes. You must downgrade all hashes before uninstalling the BlindHash extension, and you must provide the Uninstall Key.</comment>
-                        </downgrade_hashes>      
-                        
-                        <api_private_key>
-                            <!--<label>Total Hashes</label>-->
-                            <frontend_type>text</frontend_type>
-                            <sort_order>60</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>0</show_in_website>
-                            <show_in_store>0</show_in_store>                            
-                            <comment><![CDATA[<script type="text/javascript">document.getElementById('blindhash_securepassword_api_private_key').style.display = 'none'; </script>]]></comment>
-                        </api_private_key> 
+                        </downgrade_hashes>
                         <total_hashes>
                             <label>Total Hashes</label>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_total_hashes</frontend_model>

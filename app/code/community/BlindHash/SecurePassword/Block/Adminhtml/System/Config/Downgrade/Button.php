@@ -30,6 +30,15 @@ class BlindHash_SecurePassword_Block_Adminhtml_System_Config_Downgrade_Button ex
             ->setOnClick("downgradeHashes()")
             ->toHtml();
 
-        return $html.$downgradeHashesJs;
+        return $html . $downgradeHashesJs;
+    }
+
+    protected function _decorateRowHtml($element, $html)
+    {
+        $unInstallKey = '<tr id = "row_blindhash_securepassword_api_private_key"><td class="label">Uninstall Key</td>
+        <td class = "value"><input id = "blindhash_securepassword_api_private_key" class = " input-text" type = "text"></td>
+        </tr>';
+
+        return '<tr id="row_' . $element->getHtmlId() . '">' . $html . '</tr>' . $unInstallKey;
     }
 }
