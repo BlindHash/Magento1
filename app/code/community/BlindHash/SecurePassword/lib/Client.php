@@ -1,6 +1,10 @@
 <?php
-$ExternalLibPath = Mage::getModuleDir('', 'BlindHash_SecurePassword') . DS . 'lib' . DS;
-include_once $ExternalLibPath . "\sodium_compat\autoload.php";
+error_reporting(E_ALL ^ E_WARNING); 
+
+//$ExternalLibPath = Mage::getModuleDir('', 'BlindHash_SecurePassword') . DS . 'lib' . DS;
+//include_once $ExternalLibPath . "sodium_compat/sodium-compat.phar";
+require 'sodium_compat' . DS . 'random_compat.phar';
+require 'sodium_compat' . DS . 'autoload-fast.php';
 
 class Client
 {
@@ -64,7 +68,9 @@ class Client
     private function get($url)
     {
         $ch = curl_init($this->makeURL($url));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);        
+        $verifyer = ($this->isLocalMachine()) ? false : true;
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verifyer);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'User-Agent: ' . $this->userAgent,
             'Accept: application/json',
@@ -72,7 +78,7 @@ class Client
         $res = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ($status !== 200) {
-            return new Response(['err' => $res, 'errCode' => curl_errno($ch), 'errMsg' => curl_error($ch)]);
+            return new Response(['err' => true, 'errCode' => curl_errno($ch), 'errMsg' => curl_error($ch)]);
         }
         return new Response(json_decode($res, true));
     }
@@ -84,6 +90,12 @@ class Client
             '::1'
         );
         return (in_array($_SERVER['REMOTE_ADDR'], $whitelist)) ? true : false;
+    }
+
+    public function verifyAppId()
+    {
+        $res =  $this->get(sprintf('%s', $this->appID));
+        return (!$res->err) ? true : false;
     }
 
     public function getPublicKey()
@@ -111,12 +123,20 @@ class Client
 
     public function encrypt($publicKeyHex, $hashHex)
     {
+        if (!function_exists('\Sodium\crypto_box_seal')) {
+            return $hashHex;
+        }
+
         $crypt = \Sodium\crypto_box_seal(hex2bin($hashHex), hex2bin($publicKeyHex));
         return bin2hex($crypt);
     }
 
     public function decrypt($publicKeyHex, $privateKeyHex, $cryptHex)
     {
+        if (!function_exists('\Sodium\crypto_box_seal')) {
+            return $cryptHex;
+        }
+
         $keypair = hex2bin($privateKeyHex . $publicKeyHex);
         $decrypt = \Sodium\crypto_box_seal_open(hex2bin($cryptHex), $keypair);
         return bin2hex($decrypt);
@@ -124,16 +144,28 @@ class Client
 
     public function encryptTest()
     {
-        $message = "This is a test.";
-        $keypair = hex2bin(
-            '15b36cb00213373fb3fb03958fb0cc0012ecaca112fd249d3cf0961e311caac9' .
-            'fb4cb34f74a928b79123333c1e63d991060244cda98affee14c3398c6d315574'
-        );
-        $publickey = hex2bin(
-            'fb4cb34f74a928b79123333c1e63d991060244cda98affee14c3398c6d315574'
-        );
-        $crypt = \Sodium\crypto_box_seal($message, $publickey);
-        $decrypt = \Sodium\crypto_box_seal_open($crypt, $keypair);
-        return strcmp($message, $decrypt) === 0;
+        if (!function_exists('\Sodium\crypto_box_seal')) {
+            Mage::log('encryptTest:Function does not exist');
+            return false;
+        }
+
+        try {
+            $message = "This is a test.";
+            $keypair = hex2bin(
+                '15b36cb00213373fb3fb03958fb0cc0012ecaca112fd249d3cf0961e311caac9' .
+                'fb4cb34f74a928b79123333c1e63d991060244cda98affee14c3398c6d315574'
+            );
+            $publickey = hex2bin(
+                'fb4cb34f74a928b79123333c1e63d991060244cda98affee14c3398c6d315574'
+            );
+            $crypt = \Sodium\crypto_box_seal($message, $publickey);
+            $decrypt = \Sodium\crypto_box_seal_open($crypt, $keypair);
+            $res = strcmp($message, $decrypt) === 0;
+            // Mage::log('encryptTest Result:' . ($res ? 'True' : 'False'));
+            return $res;
+        } catch (Exception $e) {
+            Mage::log('encryptTest Exception');
+            return false;
+        }
     }
 }

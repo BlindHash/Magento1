@@ -4,6 +4,8 @@ $ExternalLibPath = Mage::getModuleDir('', 'BlindHash_SecurePassword') . DS . 'li
 require_once $ExternalLibPath . 'Client.php';
 require_once $ExternalLibPath . 'Response.php';
 
+//require_once $ExternalLibPath . 'sodium_compat' . DS . 'autoload.php';
+
 class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encryption implements BlindHash_SecurePassword_Model_Encryption_Interface
 {
 
@@ -44,7 +46,7 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
      */
     public function getHash($plainText, $salt = false)
     {
-        if (!(boolean) Mage::getStoreConfig(
+        if ($salt === false || !(boolean) Mage::getStoreConfig(
                 'blindhash/securepassword/enabled'
             )) {
             return parent::getHash($plainText, $salt);
@@ -89,7 +91,6 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
         } else {
             $hash = $this->taplink->encrypt($this->publicKeyHex, $hash);
         }
-
 
         return @implode(self::DELIMITER, [self::PREFIX, $res->hash2Hex, $salt, $version, $hash]);
     }
@@ -173,5 +174,10 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
     public function encrypTest()
     {
         return $this->taplink->encryptTest();
+    }
+    
+    public function verifyAppId()
+    {
+        return $this->taplink->verifyAppId();
     }
 }

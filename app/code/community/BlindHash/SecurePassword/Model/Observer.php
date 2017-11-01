@@ -102,32 +102,28 @@ class BlindHash_SecurePassword_Model_Observer
     {
         if (empty(Mage::getStoreConfig('blindhash/securepassword/api_key')))
             return;
-
-        if (!empty(Mage::getStoreConfig('blindhash/securepassword/api_public_key')))
-            return;
-
+        
         $encryptionModel = Mage::getModel('blindhash_securepassword/encryption');
+        
+        // Verify AppID
+        if(!$encryptionModel->verifyAppId()){            
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', '')->cleanCache();
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_key', '')->cleanCache();
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '')->cleanCache();
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/encryption_available', false)->cleanCache();
+            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Specified AppID is Invalid.'), true);
+            return;
+        }                    
+        
+        $encryptTest = $encryptionModel->encrypTest();
+        
+        Mage::getModel('core/config')->saveConfig('blindhash/securepassword/encryption_available', $encryptTest)->cleanCache();
         $publicKey = $encryptionModel->getPublicKey();
-        $encryptTest = false;
 
         if (empty($publicKey)) {
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', '');
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_key', '');
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/encryption_available', false);
-            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Api key is not valid.'), true);
-            return;
-        }
-
-        $encryptTest = $encryptionModel->encrypTest();
-        Mage::getModel('core/config')->saveConfig('blindhash/securepassword/encryption_available', $encryptTest);
-
-
-        if ($encryptTest) {
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', $publicKey);
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '')->cleanCache();
         } else {
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', '');
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '');
-        }
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', $publicKey)->cleanCache();
+	}
     }
 }
