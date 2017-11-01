@@ -9,13 +9,14 @@ class BlindHash_SecurePassword_Model_Upgrade extends BlindHash_SecurePassword_Mo
     protected $customerPasswordTable;
     protected $adminPasswordTable;
     protected $apiPasswordTable;
-    protected $prefix = self::PREFIX . self::DELIMITER;
+    protected $prefix;
     protected $count = 0;
 
     const LIMIT = 100;
 
     public function __construct()
     {
+        $this->prefix = self::PREFIX . self::DELIMITER;
         $this->resource = Mage::getSingleton('core/resource');
         $this->read = $this->resource->getConnection('core_read');
         $this->write = $this->resource->getConnection('core_write');
@@ -31,9 +32,12 @@ class BlindHash_SecurePassword_Model_Upgrade extends BlindHash_SecurePassword_Mo
      */
     public function upgradeAllPasswords()
     {
+        $startTime = microtime(true);
         $this->upgradeAllAdminPasswords();
         $this->upgradeAllApiPasswords();
         $this->upgradeAllCustomerPasswords();
+        $timeTaken = round(microtime(true) - $startTime, 4);
+        Mage::log("BlindHash upgrade completed in {$timeTaken}", null, 'blindHash.log');
         return $this->count;
     }
 

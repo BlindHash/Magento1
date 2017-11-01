@@ -9,7 +9,7 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
     protected $customerPasswordTable;
     protected $adminPasswordTable;
     protected $apiPasswordTable;
-    protected $prefix = self::PREFIX . self::DELIMITER;
+    protected $prefix;
     protected $count = 0;
     protected $privateKey;
 
@@ -17,6 +17,7 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
 
     public function __construct()
     {
+        $this->prefix = self::PREFIX . self::DELIMITER;
         $this->resource = Mage::getSingleton('core/resource');
         $this->read = $this->resource->getConnection('core_read');
         $this->write = $this->resource->getConnection('core_write');
@@ -32,10 +33,13 @@ class BlindHash_SecurePassword_Model_Downgrade extends BlindHash_SecurePassword_
      */
     public function downgradeAllPasswords($privateKey)
     {
+        $startTime = microtime(true);
         $this->privateKey = $privateKey;
         $this->downgradeAllAdminPasswords();
         $this->downgradeAllApiPasswords();
         $this->downgradeAllCustomerPasswords();
+        $timeTaken = round(microtime(true) - $startTime, 4);
+        Mage::log("BlindHash downgrade completed in {$timeTaken}", null, 'blindHash.log');
         return $this->count;
     }
 
