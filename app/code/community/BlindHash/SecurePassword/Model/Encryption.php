@@ -84,13 +84,9 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
         if ($res->error) {
             Mage::logException($res->error);
         }
-
-        if ($version == self::OLD_HASHING_WITH_SALT_VERSION) {
-            //Encrypt hash with libsodium
-            $hash = $this->taplink->encrypt($this->publicKeyHex, @explode(':', $hash)[0]);
-        } else {
-            $hash = $this->taplink->encrypt($this->publicKeyHex, $hash);
-        }
+        
+        //Encrypt hash1 with libsodium
+        $hash = $this->taplink->encrypt($this->publicKeyHex, $hash);
 
         return @implode(self::DELIMITER, [self::PREFIX, $res->hash2Hex, $salt, $version, $hash]);
     }
