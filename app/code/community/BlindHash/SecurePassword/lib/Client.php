@@ -1,10 +1,9 @@
 <?php
-error_reporting(E_ALL ^ E_WARNING); 
+error_reporting(E_ALL ^ E_WARNING);
 
-//$ExternalLibPath = Mage::getModuleDir('', 'BlindHash_SecurePassword') . DS . 'lib' . DS;
-//include_once $ExternalLibPath . "sodium_compat/sodium-compat.phar";
-require 'sodium_compat' . DS . 'random_compat.phar';
-require 'sodium_compat' . DS . 'autoload-fast.php';
+$ExternalLibPath = Mage::getModuleDir('', 'BlindHash_SecurePassword') . DS . 'lib' . DS;
+include_once $ExternalLibPath . 'sodium_compat' . DS . 'random_compat.phar';
+include_once $ExternalLibPath . 'sodium_compat' . DS . 'autoload-fast.php';
 
 class Client
 {
@@ -68,7 +67,7 @@ class Client
     private function get($url)
     {
         $ch = curl_init($this->makeURL($url));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);        
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $verifyer = ($this->isLocalMachine()) ? false : true;
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verifyer);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
@@ -94,7 +93,7 @@ class Client
 
     public function verifyAppId()
     {
-        $res =  $this->get(sprintf('%s', $this->appID));
+        $res = $this->get(sprintf('%s', $this->appID));
         return (!$res->err) ? true : false;
     }
 
@@ -123,29 +122,35 @@ class Client
 
     public function encrypt($publicKeyHex, $hashHex)
     {
-        if (!function_exists('\Sodium\crypto_box_seal')) {
+        if (!class_exists('ParagonIE_Sodium_Compat') || strlen($publicKeyHex) < 64 || strlen($hashHex) < 1) {
             return $hashHex;
         }
 
-        $crypt = \Sodium\crypto_box_seal(hex2bin($hashHex), hex2bin($publicKeyHex));
-        return bin2hex($crypt);
+        $crypt = ParagonIE_Sodium_Compat::crypto_box_seal(hex2bin($hashHex), hex2bin($publicKeyHex));
+        return "Z" . bin2hex($crypt);
     }
 
     public function decrypt($publicKeyHex, $privateKeyHex, $cryptHex)
     {
-        if (!function_exists('\Sodium\crypto_box_seal')) {
+        if (!class_exists('ParagonIE_Sodium_Compat') || strlen($publicKeyHex) < 64 || strlen($privateKeyHex) < 64) {
+            if (strlen($cryptHex) > 0 && substr($cryptHex, 0, 1) === 'Z') {
+                throw new Exception("Missing/Invalid Decryption Key - Decryption Key is required to remove BlindHash protection!");
+            }
+            return $cryptHex;
+        } else if (substr($cryptHex, 0, 1) !== 'Z') {
             return $cryptHex;
         }
 
+        $ciphertext = hex2bin(substr($cryptHex, 1, strlen($cryptHex) - 1));
         $keypair = hex2bin($privateKeyHex . $publicKeyHex);
-        $decrypt = \Sodium\crypto_box_seal_open(hex2bin($cryptHex), $keypair);
+        $decrypt = ParagonIE_Sodium_Compat::crypto_box_seal_open($ciphertext, $keypair);
         return bin2hex($decrypt);
     }
 
     public function encryptTest()
     {
-        if (!function_exists('\Sodium\crypto_box_seal')) {
-            Mage::log('encryptTest:Function does not exist');
+        if (!class_exists('ParagonIE_Sodium_Compat')) {
+            Mage::log('BlindHash Encrypt Test: Class \'ParagonIE_Sodium_Compat\' does not exist.');
             return false;
         }
 
@@ -158,8 +163,8 @@ class Client
             $publickey = hex2bin(
                 'fb4cb34f74a928b79123333c1e63d991060244cda98affee14c3398c6d315574'
             );
-            $crypt = \Sodium\crypto_box_seal($message, $publickey);
-            $decrypt = \Sodium\crypto_box_seal_open($crypt, $keypair);
+            $crypt = ParagonIE_Sodium_Compat::crypto_box_seal($message, $publickey);
+            $decrypt = ParagonIE_Sodium_Compat::crypto_box_seal_open($crypt, $keypair);
             $res = strcmp($message, $decrypt) === 0;
             // Mage::log('encryptTest Result:' . ($res ? 'True' : 'False'));
             return $res;
