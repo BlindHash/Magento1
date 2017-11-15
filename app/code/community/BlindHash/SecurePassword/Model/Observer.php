@@ -102,28 +102,24 @@ class BlindHash_SecurePassword_Model_Observer
     {
         if (empty(Mage::getStoreConfig('blindhash/securepassword/api_key')))
             return;
-        
+
         $encryptionModel = Mage::getModel('blindhash_securepassword/encryption');
-        
+        $taplinkResponse = $encryptionModel->verifyAppId();
         // Verify AppID
-        if(!$encryptionModel->verifyAppId()){            
+        if ($taplinkResponse == false) {
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', '')->cleanCache();
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_key', '')->cleanCache();
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '')->cleanCache();
+            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/server_list', '')->cleanCache();
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/encryption_available', false)->cleanCache();
             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Specified AppID is Invalid.'), true);
             return;
-        }                    
-        
-        $encryptTest = $encryptionModel->encrypTest();
-        
-        Mage::getModel('core/config')->saveConfig('blindhash/securepassword/encryption_available', $encryptTest)->cleanCache();
-        $publicKey = $encryptionModel->getPublicKey();
+        }
 
-        if (empty($publicKey)) {
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '')->cleanCache();
-        } else {
-            Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', $publicKey)->cleanCache();
-	}
+        Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', $taplinkResponse->publicKey)->cleanCache();
+        Mage::getModel('core/config')->saveConfig('blindhash/securepassword/server_list', @implode(",", $taplinkResponse->servers))->cleanCache();
+
+        $encryptTest = $encryptionModel->encrypTest();
+        Mage::getModel('core/config')->saveConfig('blindhash/securepassword/encryption_available', $encryptTest)->cleanCache();
     }
 }

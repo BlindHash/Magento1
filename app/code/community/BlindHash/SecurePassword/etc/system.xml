@@ -58,11 +58,20 @@
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>                            
-                        </api_public_key> 
+                        </api_public_key>
+                        <server_list translate="label comment" module="blindhash_securepassword">
+                            <label>Taplink Server List</label>
+                            <frontend_model>blindhash_securepassword/adminhtml_system_config_taplink_serverlist</frontend_model>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>40</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>                            
+                        </server_list> 
                         <upgrade_hashes translate="label comment" module="blindhash_securepassword">
                             <frontend_type>button</frontend_type>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_upgrade_button</frontend_model>
-                            <sort_order>40</sort_order>
+                            <sort_order>50</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -71,7 +80,7 @@
                         <downgrade_hashes translate="label comment" module="blindhash_securepassword">
                             <frontend_type>button</frontend_type>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_downgrade_button</frontend_model>
-                            <sort_order>50</sort_order>
+                            <sort_order>60</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -81,7 +90,7 @@
                             <label>Total Hashes</label>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_total_hashes</frontend_model>
                             <frontend_type>label</frontend_type>                            
-                            <sort_order>60</sort_order>
+                            <sort_order>70</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>                            
@@ -90,11 +99,28 @@
                             <label>BlindHash Protected Hashes</label>
                             <frontend_model>blindhash_securepassword/adminhtml_system_config_total_blindhashes</frontend_model>
                             <frontend_type>label</frontend_type>                            
-                            <sort_order>70</sort_order>
+                            <sort_order>80</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>                            
-                        </total_blindhashes>            
+                        </total_blindhashes>
+                        <retry_count>
+                            <label>Taplink Request Retry Count</label>
+                            <frontend_type>text</frontend_type>                            
+                            <sort_order>90</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>                            
+                        </retry_count>
+                        <timeout>
+                            <label>Taplink Request Timeout</label>
+                            <comment>Timeout values should be passed in seconds</comment>
+                            <frontend_type>text</frontend_type>                            
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>                            
+                        </timeout>            
                     </fields>
                 </securepassword>
             </groups>
