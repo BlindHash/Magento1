@@ -3,7 +3,7 @@
 class Response
 {
 
-    public $err;    
+    public $err;
     public $errCode;
     public $errMsg;
     public $matched;
@@ -13,6 +13,8 @@ class Response
     private $new_s2;
     public $hash2Hex;
     public $newHash2Hex;
+    public $servers;
+    public $publicKey;
 
     function __construct(Array $params = [])
     {
@@ -46,6 +48,11 @@ class Response
             return $this->vid;
         if ($key === "newVersionId")
             return $this->new_vid;
+        if ($key === "servers")
+            return $this->servers;
+        if ($key === "publicKey")
+            return $this->publicKey;
+
 
         return property_exists($this, $key) ? $this->{$key} : null;
     }

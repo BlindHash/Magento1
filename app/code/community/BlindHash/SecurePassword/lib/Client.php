@@ -11,14 +11,18 @@ class Client
     public $appID;
     public $userAgent;
     public $servers;
+    public $retryCount;
+    public $timeout;
     public static $hashAlgorithm = 'sha512';
     public static $defaultServer = 'api.taplink.co';
 
-    function __construct($appID)
+    function __construct($appID, $retryCount = 2, $timeout = 1000, $serverList = array())
     {
         $this->appID = $appID;
         $this->userAgent = 'TapLink/1.0 php/' . phpversion();
-        $this->servers = [self::$defaultServer];
+        $this->retryCount = $retryCount;
+        $this->timeout = $timeout;
+        $this->servers = (empty($serverList)) ? [self::$defaultServer] : $serverList;
     }
 
     public function getSalt($hash1Hex, $versionID = null)
@@ -66,20 +70,37 @@ class Client
 
     private function get($url)
     {
-        $ch = curl_init($this->makeURL($url));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $verifyer = ($this->isLocalMachine()) ? false : true;
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verifyer);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'User-Agent: ' . $this->userAgent,
-            'Accept: application/json',
-        ));
-        $res = curl_exec($ch);
-        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if ($status !== 200) {
-            return new Response(['err' => true, 'errCode' => curl_errno($ch), 'errMsg' => curl_error($ch)]);
+        $retryCount = 0;
+        for ($i = 0; $i <= $this->retryCount; $i++) {
+            $curlTimeout = $this->timeout + ($i * $this->timeout) ;
+            foreach ($this->servers as $server) {
+                $retryCount++; 
+                $taplinkUrl = sprintf('https://%s/%s', trim($server, '/'), ltrim($url, '/'));
+                $ch = curl_init($taplinkUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, $curlTimeout);
+                $verifyer = ($this->isLocalMachine()) ? false : true;
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verifyer);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                    'User-Agent: ' . $this->userAgent,
+                    'Accept: application/json',
+                ));
+                $res = curl_exec($ch);
+                $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                if ($status !== 0) {
+                    Mage::log("Succeed at timeout: " . ($curlTimeout) . " second(s) | retrycount: " . ($retryCount), null, "BlindHash_Request.log");
+                    if ($status !== 200) {
+                        return new Response(['err' => true, 'errCode' => curl_errno($ch), 'errMsg' => curl_error($ch)]);
+                    }
+
+                    return new Response(json_decode($res, true));
+                } else {
+//                    TODO log failures
+                    Mage::log("Failed at timeout: " . ( $curlTimeout) . " second(s) | retrycount: " . ($retryCount), null, "BlindHash_Request.log");
+                }
+//                Mage::log("timeout: " . (1000 * $curlTimeout) . " | retrycount: " . ($i + 1), null, "BlindHash_Request.log");
+            }
         }
-        return new Response(json_decode($res, true));
     }
 
     public function isLocalMachine()
@@ -94,30 +115,7 @@ class Client
     public function verifyAppId()
     {
         $res = $this->get(sprintf('%s', $this->appID));
-        return (!$res->err) ? true : false;
-    }
-
-    public function getPublicKey()
-    {
-        $ch = curl_init($this->makeURL($this->appID));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        $verifyer = ($this->isLocalMachine()) ? false : true;
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verifyer);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'User-Agent: ' . $this->userAgent,
-            'Accept: application/json',
-        ));
-        $res = curl_exec($ch);
-        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if ($status !== 200) {
-            return;
-        }
-        $res = json_decode($res, true);
-        if (isset($res['publicKey']))
-            return $res['publicKey'];
-        else
-            return;
+        return (!$res->err) ? $res : false;
     }
 
     public function encrypt($publicKeyHex, $hashHex)
