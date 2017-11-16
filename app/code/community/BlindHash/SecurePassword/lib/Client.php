@@ -12,6 +12,9 @@ class Client
     public $userAgent;
     public $servers;
     public $retryCount;
+    public $requestCounter = 0;
+    public $retryCounter = 0;
+    public $errorCounter = 0;
     public $timeout;
     public static $hashAlgorithm = 'sha512';
     public static $defaultServer = 'api.taplink.co';
@@ -23,6 +26,12 @@ class Client
         $this->retryCount = $retryCount;
         $this->timeout = $timeout;
         $this->servers = (empty($serverList)) ? [self::$defaultServer] : $serverList;
+    }
+
+    function __destruct()
+    {
+//        Mage::log("errorCounter: " . ($this->errorCounter ) . " retryCounter: " . ($this->retryCounter) . " requestCounter: " . ($this->requestCounter), null, "BlindHash_Request.log");        
+        Mage::helper('blindhash_securepassword')->updatedBlindHashRequestCounters((object) array('total_error_count' => $this->errorCounter, 'total_request_count' => $this->requestCounter, 'total_retry_count' => $this->retryCounter));
     }
 
     public function getSalt($hash1Hex, $versionID = null)
@@ -70,15 +79,15 @@ class Client
 
     private function get($url)
     {
-        $retryCount = 0;
         for ($i = 0; $i <= $this->retryCount; $i++) {
-            $curlTimeout = $this->timeout + ($i * $this->timeout) ;
+            $this->retryCounter = $i;
+            $curlTimeout = $this->timeout + ($i * $this->timeout);
             foreach ($this->servers as $server) {
-                $retryCount++; 
+                $this->requestCounter++;
                 $taplinkUrl = sprintf('https://%s/%s', trim($server, '/'), ltrim($url, '/'));
                 $ch = curl_init($taplinkUrl);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, $curlTimeout);
+                curl_setopt($ch, CURLOPT_TIMEOUT_MS, $curlTimeout);
                 $verifyer = ($this->isLocalMachine()) ? false : true;
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verifyer);
                 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
@@ -87,20 +96,18 @@ class Client
                 ));
                 $res = curl_exec($ch);
                 $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
                 if ($status !== 0) {
-                    Mage::log("Succeed at timeout: " . ($curlTimeout) . " second(s) | retrycount: " . ($retryCount), null, "BlindHash_Request.log");
                     if ($status !== 200) {
                         return new Response(['err' => true, 'errCode' => curl_errno($ch), 'errMsg' => curl_error($ch)]);
                     }
 
                     return new Response(json_decode($res, true));
-                } else {
-//                    TODO log failures
-                    Mage::log("Failed at timeout: " . ( $curlTimeout) . " second(s) | retrycount: " . ($retryCount), null, "BlindHash_Request.log");
                 }
-//                Mage::log("timeout: " . (1000 * $curlTimeout) . " | retrycount: " . ($i + 1), null, "BlindHash_Request.log");
             }
         }
+        $this->errorCounter++;
+        return new Response(['err' => true, 'errCode' => -1, 'errMsg' => 'Request Timeout']);
     }
 
     public function isLocalMachine()
@@ -114,8 +121,7 @@ class Client
 
     public function verifyAppId()
     {
-        $res = $this->get(sprintf('%s', $this->appID));
-        return (!$res->err) ? $res : false;
+        return $this->get(sprintf('%s', $this->appID));
     }
 
     public function encrypt($publicKeyHex, $hashHex)

@@ -105,14 +105,16 @@ class BlindHash_SecurePassword_Model_Observer
 
         $encryptionModel = Mage::getModel('blindhash_securepassword/encryption');
         $taplinkResponse = $encryptionModel->verifyAppId();
+
         // Verify AppID
-        if ($taplinkResponse == false) {
+        if ($taplinkResponse->err == true) {
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/enabled', '')->cleanCache();
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_key', '')->cleanCache();
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/api_public_key', '')->cleanCache();
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/server_list', '')->cleanCache();
             Mage::getModel('core/config')->saveConfig('blindhash/securepassword/encryption_available', false)->cleanCache();
-            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__('Specified AppID is Invalid.'), true);
+            $errorMessage = ($taplinkResponse->errCode == -1) ? $taplinkResponse->errMsg : "Specified AppID is Invalid.";
+            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('blindhash_securepassword')->__($errorMessage), true);
             return;
         }
 

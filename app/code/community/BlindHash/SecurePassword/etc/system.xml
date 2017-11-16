@@ -103,26 +103,70 @@
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>                            
-                        </total_blindhashes>
+                        </total_blindhashes>                             
+                    </fields>
+                </securepassword>
+                <request translate="label" module="blindhash_securepassword">
+                    <label>Request Management</label>                    
+                    <expanded>1</expanded>
+                    <sort_order>20</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>                       
+                        <request_statistics translate="label comment" module="blindhash_securepassword">
+                            <label>Track Request Statistics ?</label>                            
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </request_statistics>
                         <retry_count>
-                            <label>Taplink Request Retry Count</label>
+                            <label>Retry Count</label>
                             <frontend_type>text</frontend_type>                            
-                            <sort_order>90</sort_order>
+                            <sort_order>20</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>                            
                         </retry_count>
+                        
                         <timeout>
-                            <label>Taplink Request Timeout</label>
-                            <comment>Timeout values should be passed in seconds</comment>
+                            <label>Timeout</label>
                             <frontend_type>text</frontend_type>                            
-                            <sort_order>100</sort_order>
+                            <sort_order>30</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>                            
-                        </timeout>            
+                        </timeout>
+                        <total_retry_count>
+                            <label>Total Retry Count</label>                            
+                            <frontend_type>label</frontend_type>                            
+                            <sort_order>40</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>                            
+                        </total_retry_count>
+                        <total_request_count>
+                            <label>Total Request Count</label>                            
+                            <frontend_type>label</frontend_type>                            
+                            <sort_order>50</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>                            
+                        </total_request_count>
+                        <total_error_count>
+                            <label>Total Error Count</label>
+                            <frontend_type>label</frontend_type>                            
+                            <sort_order>60</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>                            
+                        </total_error_count>
+                          
                     </fields>
-                </securepassword>
+                </request>
             </groups>
         </blindhash>
     </sections>

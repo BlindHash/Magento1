@@ -27,9 +27,9 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
     {
         //Get Api key from System Config
         $appId = Mage::getStoreConfig('blindhash/securepassword/api_key');
-        $retryCount = Mage::getStoreConfig('blindhash/securepassword/retry_count');
-        $timeout = Mage::getStoreConfig('blindhash/securepassword/timeout');
-        $serverList = @explode(',', Mage::getStoreConfig('blindhash/securepassword/server_list'));
+        $retryCount = Mage::getStoreConfig('blindhash/request/retry_count');
+        $timeout = Mage::getStoreConfig('blindhash/request/timeout');
+        $serverList = (Mage::getStoreConfig('blindhash/securepassword/server_list')) ? @explode(',', Mage::getStoreConfig('blindhash/securepassword/server_list')) : array();
         $this->publicKeyHex = Mage::getStoreConfig('blindhash/securepassword/api_public_key');
         $this->taplink = new Client($appId, $retryCount, $timeout, $serverList);
     }

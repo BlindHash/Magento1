@@ -10,7 +10,7 @@
             <securepassword>                
                 <enabled>0</enabled>
                 <retry_count>2</retry_count>
-                <timeout>1</timeout>
+                <timeout>1000</timeout>
             </securepassword>
         </blindhash>
     </default>
