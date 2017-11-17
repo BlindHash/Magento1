@@ -30,7 +30,6 @@ class Client
 
     function __destruct()
     {
-//        Mage::log("errorCounter: " . ($this->errorCounter ) . " retryCounter: " . ($this->retryCounter) . " requestCounter: " . ($this->requestCounter), null, "BlindHash_Request.log");        
         Mage::helper('blindhash_securepassword')->updatedBlindHashRequestCounters((object) array('total_error_count' => $this->errorCounter, 'total_request_count' => $this->requestCounter, 'total_retry_count' => $this->retryCounter));
     }
 

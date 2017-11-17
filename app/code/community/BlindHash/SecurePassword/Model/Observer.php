@@ -14,9 +14,7 @@ class BlindHash_SecurePassword_Model_Observer
      */
     public function customerCustomerAuthenticated($observer)
     {
-        if (!(boolean) Mage::getStoreConfig(
-                'blindhash/securepassword/enabled'
-            )) {
+        if (!(boolean) Mage::getStoreConfig('blindhash/securepassword/enabled')) {
             return;
         }
 
@@ -46,9 +44,7 @@ class BlindHash_SecurePassword_Model_Observer
      */
     public function adminUserAuthenticateAfter($observer)
     {
-        if (!(boolean) Mage::getStoreConfig(
-                'blindhash/securepassword/enabled'
-            )) {
+        if (!(boolean) Mage::getStoreConfig('blindhash/securepassword/enabled')) {
             return;
         }
 
@@ -74,9 +70,7 @@ class BlindHash_SecurePassword_Model_Observer
      */
     public function apiUserAuthenticated($observer)
     {
-        if (!(boolean) Mage::getStoreConfig(
-                'blindhash/securepassword/enabled'
-            )) {
+        if (!(boolean) Mage::getStoreConfig('blindhash/securepassword/enabled')) {
             return;
         }
 
