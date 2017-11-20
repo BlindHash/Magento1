@@ -142,6 +142,7 @@
                         </retry_count>                        
                         <timeout>
                             <label>Timeout</label>
+                            <comment>Timout values should be passed in miliseconds (1000 ms = 1 second)</comment>
                             <frontend_type>text</frontend_type>                            
                             <sort_order>30</sort_order>
                             <show_in_default>1</show_in_default>
