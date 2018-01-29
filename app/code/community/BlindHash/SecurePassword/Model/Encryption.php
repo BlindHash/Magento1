@@ -109,6 +109,22 @@ class BlindHash_SecurePassword_Model_Encryption extends Mage_Core_Model_Encrypti
     }
 
     /**
+     * Check if hash can be upgraded to a BlindHash
+     *
+     * @param string $password
+     * @param string $hash
+     * @return bool
+     */
+    public function CanUpgradeToBlindHash($password, $hash)
+    {
+        if ($this->IsBlindHashed($hash)) {
+            return false;
+        }
+
+        return parent::validateHash($password, $hash);
+    }
+
+    /**
      * Validate hash against hashing method (with or without salt)
      *
      * @param string $password

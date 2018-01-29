@@ -9,10 +9,12 @@
         <blindhash>
             <securepassword>                
                 <enabled>0</enabled>
-                <legacy_hashes>0</legacy_hashes>
+                <legacy_hashes>0</legacy_hashes>                
+            </securepassword>
+            <request>
                 <retry_count>2</retry_count>
                 <timeout>1000</timeout>
-            </securepassword>
+            </request>
         </blindhash>
     </default>
     <global>

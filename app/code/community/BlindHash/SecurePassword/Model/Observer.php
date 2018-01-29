@@ -26,8 +26,7 @@ class BlindHash_SecurePassword_Model_Observer
 
         // if the hash validates against the old hashing method,
         // replace with new hash
-        if (!$encrypter->IsBlindHashed($customer->getPasswordHash())
-        ) {
+        if ($encrypter->CanUpgradeToBlindHash($password, $customer->getPasswordHash())) {
             $customer->setPassword($password);
             $customer->save();
         }
@@ -54,7 +53,7 @@ class BlindHash_SecurePassword_Model_Observer
         $user = $observer->getUser();
         $password = $observer->getPassword();
 
-        if (!$encrypter->IsBlindHashed($user->getPassword())) {
+        if ($encrypter->CanUpgradeToBlindHash($password, $user->getPassword())) {
             $user->setPassword($password);
             $user->save();
         }
@@ -80,7 +79,7 @@ class BlindHash_SecurePassword_Model_Observer
         $user = $observer->getModel();
         $password = $observer->getApiKey();
 
-        if (!$encrypter->IsBlindHashed($user->getApiKey())) {
+        if ($encrypter->CanUpgradeToBlindHash($password, $user->getApiKey())) {
             $user->setApiKey($password);
             $user->save();
         }
